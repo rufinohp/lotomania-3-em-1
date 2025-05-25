@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotomania - Conferência de Acertos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #333333;
+      --td-bg: #f9f9f9;
+      --td-border: #cccccc;
+      --selected-bg: #4CAF50;
+      --played-bg: #FF4000;
+      --hit-bg: #4CAF50;
+      --button-bg: #007BFF;
+      --button-hover: #0056b3;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --text-color: #f5f5f5;
+      --td-bg: #1e1e1e;
+      --td-border: #333333;
+      --selected-bg: #66bb6a;
+      --played-bg: #ff7961;
+      --hit-bg: #66bb6a;
+      --button-bg: #1e88e5;
+      --button-hover: #1565c0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      margin: 0 auto;
+      max-width: 960px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h3 {
+      text-align: center;
+    }
+
+    .container-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+      max-width: 300px;
+      flex: 1 1 280px;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
+
+    td {
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+      text-align: center;
+      vertical-align: middle;
+      border: 1px solid var(--td-border);
+      background-color: var(--td-bg);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      td {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+      }
+    }
+
+    td.selected {
+      background-color: var(--selected-bg);
+      color: white;
+    }
+
+    td.played {
+      background-color: var(--played-bg);
+      color: white;
+    }
+
+    td.hit {
+      background-color: var(--hit-bg);
+      color: white;
+      font-weight: bold;
+    }
+
+    #counter {
+      font-weight: bold;
+      color: var(--text-color);
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 16px;
+      background-color: var(--button-bg);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    .input-result {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .input-result input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 10px;
+      border: 1px solid var(--td-border);
+      border-radius: 4px;
+      background-color: var(--td-bg);
+      color: var(--text-color);
+    }
+
+    .score {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .button-group button {
+      flex: 1 1 45%;
+      min-width: 120px;
+    }
+
+    @media (max-width: 480px) {
+      .button-group button {
+        flex: 1 1 100%;
+        min-width: 100%;
+      }
+    }
+
+    .theme-toggle {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .theme-toggle button {
+      background-color: var(--button-bg);
+      color: white;
+      font-size: 16px;
+      padding: 6px 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Botão de tema -->
+<div class="theme-toggle">
+  <button onclick="toggleTheme()">🌙 Alternar para Tema Escuro</button>
+</div>
+
+<!-- Grade Principal -->
+<div class="container-wrapper">
+
+  <div class="grid-container">
+    <h3>Selecione 60 Dezenas</h3>
+    <div id="counter">Dezenas selecionadas: 0 / 60</div>
+    <div id="main-grid"></div>
+    <div class="button-group">
+      <button onclick="selectAll()">Selecionar Tudo</button>
+      <button onclick="clearSelection()">Limpar Seleção</button>
+      <button onclick="generateGames()">Gerar 2 Jogos</button>
+      <button onclick="exportToCSV()">Exportar Jogos como CSV</button>
+    </div>
+  </div>
+
+  <!-- Jogo 1 -->
+  <div class="grid-container">
+    <h3>Jogo 1</h3>
+    <div id="game1-grid"></div>
+    <div class="score" id="score1"></div>
+  </div>
+
+  <!-- Jogo 2 -->
+  <div class="grid-container">
+    <h3>Jogo 2</h3>
+    <div id="game2-grid"></div>
+    <div class="score" id="score2"></div>
+  </div>
+
+</div>
+
+<!-- Campo para conferir resultado -->
+<div class="input-result">
+  <label for="drawnNumbers"><strong>Insira as 20 dezenas sorteadas:</strong></label>
+  <input type="text" id="drawnNumbers" inputmode="numeric"
+         placeholder="Ex: 05 12 22 33 ..." onkeypress="handleInput(event)">
+  <button onclick="checkResults()">Conferir Resultado</button>
+</div>
+
+<script>
+  const mainGrid = document.getElementById("main-grid");
+  const game1Grid = document.getElementById("game1-grid");
+  const game2Grid = document.getElementById("game2-grid");
+  const selectedNumbers = new Set();
+  let currentGames = [];
+
+  function formatNumber(n) {
+    return n === 100 ? "00" : n.toString().padStart(2, '0');
+  }
+
+  function updateCounter() {
+    document.getElementById("counter").textContent =
+      `Dezenas selecionadas: ${selectedNumbers.size} / 60`;
+  }
+
+  function createMainGrid() {
+    mainGrid.innerHTML = '';
+    const table = document.createElement("table");
+    for (let row = 0; row < 10; row++) {
+      const tr = document.createElement("tr");
+      for (let col = 0; col < 10; col++) {
+        const num = row * 10 + col + 1;
+        const td = document.createElement("td");
+        td.textContent = formatNumber(num);
+        td.dataset.value = num;
+        if (selectedNumbers.has(num)) {
+          td.classList.add("selected");
+        }
+        td.onclick = () => toggleNumber(num, td);
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+    mainGrid.appendChild(table);
+  }
+
+  function toggleNumber(num, element) {
+    if (selectedNumbers.has(num)) {
+      selectedNumbers.delete(num);
+      element.classList.remove("selected");
+    } else {
+      if (selectedNumbers.size >= 60) {
+        alert("Você só pode selecionar até 60 dezenas.");
+        return;
+      }
+      selectedNumbers.add(num);
+      element.classList.add("selected");
+    }
+    updateCounter();
+    createMainGrid();
+  }
+
+  function selectAll() {
+    clearSelection();
+    let count = 0;
+    for (let i = 1; i <= 100 && count < 60; i++) {
+      selectedNumbers.add(i);
+      count++;
+    }
+    updateCounter();
+    createMainGrid();
+  }
+
+  function clearSelection() {
+    selectedNumbers.clear();
+    updateCounter();
+    createMainGrid();
+  }
+
+  function generateValidGame(selected) {
+    let attempts = 0;
+    while (attempts++ < 1000) {
+      let game = [...selected].sort(() => Math.random() - 0.5).slice(0, 50);
+
+      const pares = game.filter(n => n % 2 === 0);
+      const impares = game.filter(n => n % 2 !== 0);
+      if (pares.length !== 25 || impares.length !== 25) continue;
+
+      const redondas = game.filter(n => n % 10 === 0);
+      if (redondas.length > 4) continue;
+
+      const gemeas = game.filter(n => {
+        const s = n.toString().padStart(2, '0');
+        return s[0] === s[1];
+      });
+      if (gemeas.length > 4) continue;
+
+      return game;
+    }
+    return null;
+  }
+
+  function generateGames() {
+    if (selectedNumbers.size !== 60) {
+      alert("Selecione exatamente 60 dezenas antes de gerar os jogos.");
+      return;
+    }
+
+    let games = [];
+    for (let i = 0; i < 2; i++) {
+      const game = generateValidGame([...selectedNumbers]);
+      if (!game) {
+        alert("Não foi possível gerar um jogo válido com os critérios definidos.\nTente mudar algumas dezenas selecionadas.");
+        return;
+      }
+      games.push(game);
+    }
+
+    currentGames = games;
+    createGameGrid(game1Grid, games[0]);
+    createGameGrid(game2Grid, games[1]);
+
+    document.getElementById("score1").textContent = "";
+    document.getElementById("score2").textContent = "";
+  }
+
+  function createGameGrid(container, gameNumbers) {
+    container.innerHTML = '';
+    const table = document.createElement("table");
+    for (let row = 0; row < 10; row++) {
+      const tr = document.createElement("tr");
+      for (let col = 0; col < 10; col++) {
+        const num = row * 10 + col + 1;
+        const td = document.createElement("td");
+        td.textContent = formatNumber(num);
+        if (gameNumbers.includes(num)) {
+          td.classList.add("played");
+          td.dataset.gameNumber = num;
+        }
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+    container.appendChild(table);
+  }
+
+  function exportToCSV() {
+    if (!currentGames || currentGames.length < 2) {
+      alert("Você precisa gerar os jogos primeiro.");
+      return;
+    }
+
+    let csvContent = "Jogo 1;\n";
+    csvContent += currentGames[0].sort((a, b) => a - b).map(n => formatNumber(n)).join(";") + "\n\n";
+    csvContent += "Jogo 2;\n";
+    csvContent += currentGames[1].sort((a, b) => a - b).map(n => formatNumber(n)).join(";") + "\n";
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "lotomania_jogos.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function checkResults() {
+    const input = document.getElementById("drawnNumbers").value.trim();
+    if (!input) {
+      alert("Digite as 20 dezenas sorteadas.");
+      return;
+    }
+
+    const drawn = input.split(/\s+/).map(d => {
+      const num = parseInt(d, 10);
+      return isNaN(num) ? null : num;
+    }).filter(Boolean);
+
+    if (drawn.length !== 20) {
+      alert("Digite exatamente 20 dezenas válidas.");
+      return;
+    }
+
+    highlightHits(drawn);
+  }
+
+  function handleInput(e) {
+    if (e.key === 'Enter') {
+      const value = e.target.value.trim();
+      const nums = value.split(/\s+/);
+      if (nums.length >= 20) {
+        checkResults();
+      }
+    }
+  }
+
+  function highlightHits(drawn) {
+    const drawnSet = new Set(drawn);
+
+    game1Grid.querySelectorAll("td.hit").forEach(td => td.classList.remove("hit"));
+    game2Grid.querySelectorAll("td.hit").forEach(td => td.classList.remove("hit"));
+
+    let hits1 = 0;
+    game1Grid.querySelectorAll("td[data-game-number]").forEach(td => {
+      const num = parseInt(td.dataset.gameNumber, 10);
+      if (drawnSet.has(num)) {
+        td.classList.add("hit");
+        hits1++;
+      }
+    });
+
+    let hits2 = 0;
+    game2Grid.querySelectorAll("td[data-game-number]").forEach(td => {
+      const num = parseInt(td.dataset.gameNumber, 10);
+      if (drawnSet.has(num)) {
+        td.classList.add("hit");
+        hits2++;
+      }
+    });
+
+    document.getElementById("score1").textContent = `Jogo 1: ${hits1} ponto(s)`;
+    document.getElementById("score2").textContent = `Jogo 2: ${hits2} ponto(s)`;
+  }
+
+  // Função para alternar tema
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("lotomania-theme", newTheme);
+
+    const themeButton = document.querySelector(".theme-toggle button");
+    themeButton.textContent = newTheme === "dark" ? "☀️ Alternar para Tema Claro" : "🌙 Alternar para Tema Escuro";
+  }
+
+  // Aplicar tema salvo
+  window.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("lotomania-theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
+    const themeButton = document.querySelector(".theme-toggle button");
+    themeButton.textContent = savedTheme === "dark" ? "☀️ Alternar para Tema Claro" : "🌙 Alternar para Tema Escuro";
+  });
+
+  createMainGrid();
+  updateCounter();
+</script>
+
+</body>
+</html>
